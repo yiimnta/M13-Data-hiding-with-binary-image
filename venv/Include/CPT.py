@@ -1,14 +1,15 @@
 import cv2
 import numpy as np
 import io
+import math
 
-class Util:
+class CPT:
 
-    def convertImageToBinaryImage(self, path):
-        np_img = self.convertImageToBlackWhiteImage(path)
+    def convertImageToBinaryMatrix(self, path):
+        np_img = self.convertImageToBinaryImage(path)
         return  np.where(np_img == 255, 1, 0)
 
-    def convertImageToBlackWhiteImage(self, path):
+    def convertImageToBinaryImage(self, path):
         img = cv2.imread(path, 0)
         mat, bw = cv2.threshold(img, 127,255, cv2.THRESH_BINARY)
         return np.array(bw)#black and white
@@ -23,6 +24,7 @@ class Util:
     def convertTextToBinary(self, s):
         st = ' '.join(format(ord(x), '08b') for x in s)
         return st
+
     def matrixMul(self, m1, m2):
         rs = []
         for i in range(len(m1)):
@@ -119,15 +121,33 @@ class Util:
         fo = io.open(pathText, "r", encoding="utf8")
         text = fo.read()
         fo.close()
-        text = text + codeToEndDecode
+
+        f_matrix = self.convertImageToBinaryMatrix(pathImg)
+        ele = 16
+
+        if text == "":
+            return self.convertBinaryMatrixToBinaryImage(f_matrix)
+        else:
+            dh = f_matrix.shape[0] - (f_matrix.shape[0] % 16) #height
+            dw = f_matrix.shape[1] - (f_matrix.shape[1] % 16) #width
+            rest = int(((dh * dw) /(ele*ele)) - len(text) - len(codeToEndDecode))
+            if(rest >= 0):
+                text = text + codeToEndDecode
+            else:
+                rest = len(codeToEndDecode) + rest
+                for i in range(0, rest):
+                    text = text + " "
+
         st = self.convertTextToBinary(text).split(" ")
-        f_matrix = self.convertImageToBinaryImage(pathImg)
+
         x = 0
         y = 0
         i = 0
-        ele = 16
-        max_size_h = np.size(f_matrix, 1)
-        max_size_v = np.size(f_matrix, 0)
+
+        max_size_h = f_matrix.shape[1]
+        max_size_v = f_matrix.shape[0]
+
+
         sss = ""
         for bit in st:
 
@@ -137,21 +157,23 @@ class Util:
             f_matrix[y * ele:y * ele + ele, x * ele: x * ele + ele] = np.matrix(f)
             f = f_matrix[y * ele:y * ele + ele, x * ele: x * ele + ele]
             x += 1
+
             if (x * ele + ele > max_size_h):
                 y += 1
                 x = 0
+
             if (y * ele + ele > max_size_v):
                 break
         return self.convertBinaryMatrixToBinaryImage(f_matrix)
 
     def runDecode(self, pathImg):
-        f_matrix = self.convertImageToBinaryImage(pathImg)
+        f_matrix = self.convertImageToBinaryMatrix(pathImg)
         x = 0
         y = 0
         i = 0
         ele = 16
-        max_size_h = np.size(f_matrix, 1)
-        max_size_v = np.size(f_matrix, 0)
+        max_size_h = f_matrix.shape[1]
+        max_size_v = f_matrix.shape[0]
         result = ""
         while 1==1:
             r = 8
@@ -170,7 +192,23 @@ class Util:
             if codeToEndDecode in result:
                 result = result[:-len(codeToEndDecode)]
                 break
+
         return result
+
+    def calcPSNR(self, img1, img2):
+
+        original = cv2.imread(img1)
+        compressed = cv2.imread(img2)
+
+        mse = np.mean((original - compressed) ** 2)
+
+        if (mse == 0):  # MSE is zero means no noise is present in the signal .
+            # Therefore PSNR have no importance.
+            return 100
+
+        max_pixel = 255
+        psnr = 20 * math.log10(max_pixel / math.sqrt(mse))
+        return psnr
 
 
 k = np.matrix([[1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1],    #1
@@ -207,13 +245,18 @@ w = [[208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223],         
     [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239],   #15
     [112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 1, 126, 127]]     #16
 
-codeToEndDecode = "Truong.Nguyen@Student.HTW-Berlin.de"
+codeToEndDecode = "HTW"
 
 
-#util = Util()
-# img = util.runEncode("./img/demo.jpg","input.txt")
-# util.convertMatrixToImage(img,"./output/test.jpg")
-# text = util.runDecode("./output/test.jpg")
+#cpt = CPT()
+# img = cpt.runEncode("./img/demo.jpg","input.txt")
+# cpt.convertMatrixToImage(img,"./output/test.jpg")
+# text = cpt.runDecode("./output/test.jpg")
 # file = open("./output/test.txt","w")
 # file.write(text)
 # file.close()
+# cpt = Cpt()
+# print(cpt.calcPSNR("./test3/1.jpg", "./test3_rs/1.bmp"))
+# print(cpt.calcPSNR("./test3/2.jpg", "./test3_rs/2.bmp"))
+# print(cpt.calcPSNR("./test3/3.jpg", "./test3_rs/3.bmp"))
+# print(cpt.calcPSNR("./test3/4.jpg", "./test3_rs/4.bmp"))

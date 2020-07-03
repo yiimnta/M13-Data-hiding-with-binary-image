@@ -4,12 +4,12 @@ from PIL import Image, ImageTk
 import cv2
 import tkinter as tk
 import numpy as np
-from CPT import Util,k,w
+from CPT import CPT,k,w
 import io
 
 class Root(Tk):
 
-    util = Util()
+    cpt = CPT()
     imgResult = None
     txtResult = None
 
@@ -116,7 +116,7 @@ class Root(Tk):
             return
         self.lblInput_tab1 = ttk.Label(self.tab1, text="Input:")
         self.lblInput_tab1.grid(column=0, sticky=W+E+S+N, row=5, columnspan=2, pady=25, padx=10)
-        imgBinary = self.util.convertImageToBlackWhiteImage(filePath)
+        imgBinary = self.cpt.convertImageToBinaryImage(filePath)
 
         img = Image.fromarray(imgBinary)
         img = img.resize((290, 290))
@@ -133,12 +133,12 @@ class Root(Tk):
         if self.imgResult is None:
             return
 
-        files = [("image files", "*.png;*.jpg"),('All Files', '*.*')]
+        files = [("image files", "*.bmp;*.png;*.jpg"),('All Files', '*.*')]
         self.savePath_tab1 = filedialog.asksaveasfile(title="Save the image",filetypes=files, defaultextension=files)
         if self.savePath_tab1 is None:
             return
         path = self.savePath_tab1.name
-        self.util.convertMatrixToImage(self.imgResult, path)
+        self.cpt.convertMatrixToImage(self.imgResult, path)
         messagebox.showinfo("Message Box", "Save image successfully!")
 
     def createButtonConvert_tab1(self):
@@ -153,7 +153,7 @@ class Root(Tk):
             messagebox.showerror("Error", "Please select a Text file")
             return
 
-        self.imgResult = self.util.runEncode(self.filename_tab1, self.textname_tab1)
+        self.imgResult = self.cpt.runEncode(self.filename_tab1, self.textname_tab1)
         self.createImageRight_tab1()
 
     def createImageRight_tab1(self):
@@ -182,7 +182,7 @@ class Root(Tk):
 
     def fileImageDialog_tab2(self):
         self.filename_tab2 = filedialog.askopenfilename(initialdir="/", title="Select an Image", filetype=
-        (("image files", "*.png;*.jpg"), ("all files", "*.*")))
+        (("image files", "*.bmp;*.png;*.jpg;"), ("all files", "*.*")))
         self.txtImage_tab2.configure(state='normal')
         self.txtImage_tab2.delete(0, END)
         self.txtImage_tab2.insert(0, self.filename_tab2)
@@ -224,7 +224,7 @@ class Root(Tk):
             messagebox.showerror("Error", "Please select an image")
             return
 
-        self.txtResult = self.util.runDecode(self.filename_tab2)
+        self.txtResult = self.cpt.runDecode(self.filename_tab2)
         self.createTextArea_tab2()
 
     def createButtonDecode_tab2(self):
@@ -244,5 +244,6 @@ class Root(Tk):
         self.txtarea_tab2.insert(tk.END, self.txtResult)
 
     # ====== END DECODE TAB ===========#
+
 root = Root()
 root.mainloop()
