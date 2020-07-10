@@ -89,7 +89,7 @@ class Root(Tk):
 
     def fileImageDialog_tab1(self):
         self.filename_tab1 = filedialog.askopenfilename(initialdir="/", title="Select an Image", filetype=
-        (("image files", "*.png;*.jpg"), ("all files", "*.*")))
+        (("image files", "*.bmp;*.png;*.jpg"), ("all files", "*.*")))
         self.txtImage_tab1.configure(state='normal')
         self.txtImage_tab1.delete(0, END)
         self.txtImage_tab1.insert(0, self.filename_tab1)
